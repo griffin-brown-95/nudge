@@ -1,7 +1,7 @@
 # Common tasks. Targets that talk to a database read it from .env.
 LOCAL_DB := postgresql://postgres:postgres@127.0.0.1:54322/postgres
 
-.PHONY: test test-db db db-reset run run-local run-memory wipe
+.PHONY: test test-db db db-reset run run-local run-memory web wipe
 
 test:            ## unit + experiment-validity tests (no database needed)
 	cd nudge && go vet ./... && go test ./...
@@ -23,6 +23,9 @@ run-local:       ## run the API against the local Supabase DB
 
 run-memory:      ## run the API with no database (events are discarded on exit)
 	set -a && . ./.env && set +a && cd nudge && STORE=memory go run ./cmd/nudge
+
+web:             ## serve the frontend on http://localhost:8000 (matches ALLOWED_ORIGIN)
+	python3 -m http.server 8000 --bind 127.0.0.1 --directory web
 
 wipe:            ## delete all experiment data in DATABASE_URL (asks first)
 	scripts/wipe.sh

@@ -15,7 +15,7 @@ The browser never talks to Supabase directly. Only the `nudge` service has DB cr
 | `nudge/experiments.yaml` | Factors, levels and salts. Edit this to change the experiment. |
 | `supabase/migrations/` | Schema and analysis views |
 | `scripts/wipe.sh` | Deletes all experiment data and keeps the schema |
-| `web/` | Static frontend (coming soon) |
+| `web/` | Static frontend: plain HTML, CSS and ES modules, no build step |
 
 ## Local development
 
@@ -28,6 +28,16 @@ make db                   # local Supabase Postgres on :54322, migrations applie
 make test-db              # store tests against the local DB
 make run-local            # API on :8080 against the local DB
 ```
+
+Then, in a second terminal:
+
+```bash
+make web                  # frontend on http://localhost:8000
+```
+
+Open http://localhost:8000 (use `localhost`, not `127.0.0.1`, so the origin
+matches `ALLOWED_ORIGIN`). Before deploying, set `API_BASE` in
+[web/config.js](web/config.js) to the Cloud Run URL.
 
 `make run-memory` runs the API without any database, for frontend work. The
 [Makefile](Makefile) lists every target.

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>A or B?</title>
+  <meta name="description" content="Just pick one. A tiny anonymous experiment.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="preload" href="fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <main class="app" id="app" data-screen="start">
+    <header class="top">
+      <span class="brand">A or B?</span>
+      <span class="progress" id="progress" aria-live="polite"></span>
+    </header>
+
+    <section class="prompt" id="prompt" aria-live="polite">
+      <h1 class="prompt-main" id="prompt-main">Just pick one.</h1>
+      <p class="prompt-sub" id="prompt-sub">Ten quick choices. No right answers.</p>
+    </section>
+
+    <!-- Every screen sits in the same stage, so the Ready button and the
+         between-trial dot are exactly where the two options are centered. -->
+    <div class="stage" id="stage">
+      <div class="screen screen-start" id="screen-start">
+        <button class="btn btn-primary" id="ready" type="button" disabled>Loading…</button>
+      </div>
+
+      <div class="screen screen-trial" id="screen-trial" role="group" aria-label="Pick one">
+        <button class="option" id="opt1" type="button" data-slot="1"></button>
+        <button class="option" id="opt2" type="button" data-slot="2"></button>
+      </div>
+
+      <div class="screen screen-gap" id="screen-gap" aria-hidden="true">
+        <span class="dot"></span>
+      </div>
+
+      <div class="screen screen-block" id="screen-block">
+        <div class="stack">
+          <button class="btn btn-primary" id="keep-going" type="button">Keep going</button>
+          <button class="btn btn-quiet" id="done" type="button">I'm done</button>
+        </div>
+      </div>
+
+      <div class="screen screen-done" id="screen-done">
+        <div class="explain">
+          <p>Every pair you saw was styled at random: the <b>color</b>, how <b>filled-in</b> each button was, its <b>size</b>, which one came <b>first</b>, whether it had a <b>label</b>, and sometimes which one was <b>pre-selected</b>.</p>
+          <p>We're measuring which of those nudge people's picks. Results will be shared once there's enough data.</p>
+          <button class="btn btn-quiet" id="play-more" type="button">Play more anyway</button>
+        </div>
+      </div>
+    </div>
+
+    <footer class="note">
+      Clicks are logged anonymously for a fun experiment: no names, no IP addresses, no tracking cookies.
+    </footer>
+  </main>
+</body>
+</html>
