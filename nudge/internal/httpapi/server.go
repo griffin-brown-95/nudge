@@ -1,8 +1,11 @@
 // Package httpapi serves the nudge HTTP API:
 //
-//	GET  /healthz                       liveness (?deep=1 also pings the DB)
+//	GET  /health                        liveness (?deep=1 also pings the DB)
 //	GET  /trials?vid=&start=&count=     a visitor's next block of trials
 //	POST /event                         one event (session_start, exposure, choice, block_end)
+//
+// Not /healthz: Cloud Run reserves some paths ending in "z" and answers them
+// itself with a 404 before they reach the container.
 package httpapi
 
 import (
@@ -53,14 +56,14 @@ func New(opts Options) *Server {
 
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /healthz", s.healthz)
+	mux.HandleFunc("GET /health", s.health)
 	mux.Handle("GET /trials", s.limit(http.HandlerFunc(s.trials)))
 	mux.Handle("POST /event", s.limit(http.HandlerFunc(s.event)))
 	mux.HandleFunc("OPTIONS /", func(w http.ResponseWriter, r *http.Request) {}) // answered by cors
 	return s.logRequests(s.cors(mux))
 }
 
-func (s *Server) healthz(w http.ResponseWriter, r *http.Request) {
+func (s *Server) health(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Query().Get("deep") == "1" {
 		ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
 		defer cancel()
