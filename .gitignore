@@ -1,0 +1,14 @@
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+
+# Go
+/nudge/bin/
+*.test
+*.out
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/

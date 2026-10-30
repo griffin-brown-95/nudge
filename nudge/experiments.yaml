@@ -1,0 +1,48 @@
+# A or B? experiment definition. See docs/EXPERIMENT.md.
+#
+# Scopes:
+#   option  - drawn independently for each of the two options on every trial
+#   trial   - drawn once per trial, shared by both options
+#   visitor - drawn once per visitor, fixed for every trial
+#
+# Changing levels or salts reshuffles assignments: bump `version` when you do.
+# Factor names become DB column names, so use lower_snake_case.
+
+version: 1
+block_size: 10
+
+factors:
+  - name: color
+    scope: option
+    salt: "297815053455009e"
+    levels: [red, orange, green, blue, purple, gray]
+
+  - name: emphasis
+    scope: option
+    salt: "a37c223e9af0d80d"
+    levels: [solid, soft, outline]
+
+  - name: size
+    scope: option
+    salt: "b8bd3b93a8ad04cf"
+    levels: [base, plus8]
+
+  - name: labels
+    scope: trial
+    salt: "ab5ba79b5b183017"
+    levels: [letters, numbers, none]
+
+  - name: label_order
+    scope: trial
+    salt: "4924abe757ef86f6"
+    levels: [normal, reversed]
+
+  - name: default_focus
+    scope: trial
+    salt: "d899a6a6f71caf85"
+    levels: [none, first, second]
+
+  - name: prime
+    scope: visitor
+    salt: "c8497948c1880900"
+    levels: [none, gut, careful]
