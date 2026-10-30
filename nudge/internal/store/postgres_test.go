@@ -100,11 +100,12 @@ func TestPostgres(t *testing.T) {
 		t.Errorf("choices for visitor = %d, want 1 (retries must not duplicate)", n)
 	}
 
-	var color1, prime string
+	var color1, frame, prime string
 	var conds map[string]any
-	conn.QueryRow(ctx, `select opt1_color, prime, conditions from exposures where id = $1`, xid).Scan(&color1, &prime, &conds)
-	if color1 != tr.Options[0]["color"] || prime != a.Visitor(vid)["prime"] {
-		t.Errorf("stored columns opt1_color=%q prime=%q, want %q %q", color1, prime, tr.Options[0]["color"], a.Visitor(vid)["prime"])
+	conn.QueryRow(ctx, `select opt1_color, frame, prime, conditions from exposures where id = $1`, xid).Scan(&color1, &frame, &prime, &conds)
+	if color1 != tr.Options[0]["color"] || frame != tr.Trial["frame"] || prime != a.Visitor(vid)["prime"] {
+		t.Errorf("stored columns opt1_color=%q frame=%q prime=%q, want %q %q %q",
+			color1, frame, prime, tr.Options[0]["color"], tr.Trial["frame"], a.Visitor(vid)["prime"])
 	}
 	if conds["options"] == nil || conds["trial"] == nil || conds["visitor"] == nil {
 		t.Errorf("conditions jsonb incomplete: %v", conds)

@@ -23,6 +23,7 @@ const OFFLINE_LEVELS = {
     size: ["base", "plus8"],
   },
   trial: {
+    frame: ["tiles", "split"],
     labels: ["letters", "numbers", "none"],
     label_order: ["normal", "reversed"],
     default_focus: ["none", "first", "second"],
@@ -192,12 +193,23 @@ function renderOptions(trial) {
   });
 }
 
+// In the split frame the options fill the stage's band edge to edge, so the
+// Ready button and the dot still sit exactly on the line between them.
+function setSplitBounds() {
+  const r = $("stage").getBoundingClientRect();
+  app.style.setProperty("--split-top", `${Math.round(r.top)}px`);
+  app.style.setProperty("--split-bottom", `${Math.round(innerHeight - r.bottom)}px`);
+}
+addEventListener("resize", setSplitBounds);
+
 function runTrial(i) {
   const trial = s.block[i];
   const renderStart = performance.now();
   const pos = trial.index % s.blockSize;
   $("progress").textContent = `${pos + 1} / ${s.blockSize}`;
 
+  app.dataset.frame = trial.trial.frame || "tiles";
+  setSplitBounds();
   renderOptions(trial);
   show("trial", "Pick one.", primeText());
 

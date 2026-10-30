@@ -52,6 +52,7 @@ create table exposures (
   opt2_color         text,
   opt2_emphasis      text,
   opt2_size          text,
+  frame              text,                     -- tiles | split (options fill half the play area)
   labels             text,
   label_order        text,
   default_focus      text,

@@ -48,6 +48,7 @@ Every option uses **one brand font** (self-hosted, so no Google Fonts requests),
 ### Per trial (applies to both options)
 | Factor | Levels | Notes |
 |---|---|---|
+| `frame` | tiles, split | **tiles**: two buttons in the middle of the screen. **split**: each option fills half of the play area, left/right or top/bottom. In split, `size` +8% means a 52/48 share of the screen instead of a scale. Added 2026-10-29 to test whether nudges survive when the targets are huge. |
 | `labels` | letters (A/B), numbers (1/2), none | With no labels, options differ only in color, emphasis and size. |
 | `label_order` | normal (A, then B), reversed (B, then A) | Answers "do people favor A or 1?" separately from position. |
 | `default_focus` | none, first, second | The focused option is the one that answers Enter. |
@@ -60,7 +61,7 @@ Every option uses **one brand font** (self-hosted, so no Google Fonts requests),
 **Dropped for now:** `social_proof`, which moves to the future results module. The old warm/cool `color` factor is also gone, replaced by the hue attribute above.
 
 ### Variety
-There are 6 × 3 × 2 = 36 possible looks per option, which makes 1,296 ordered pairs. Labels, label order and focus multiply that to about 23,000 different screens, so a visitor doing 50 trials will rarely see a repeat.
+There are 6 × 3 × 2 = 36 possible looks per option, which makes 1,296 ordered pairs. Frame, labels, label order and focus multiply that to about 47,000 different screens, so a visitor doing 50 trials will rarely see a repeat.
 
 ## 3a. How much data we need
 

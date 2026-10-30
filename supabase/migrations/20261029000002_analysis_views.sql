@@ -45,6 +45,7 @@ select
   t.visitor_id,
   t.experiment_version,
   t.trial_index,
+  t.frame,
   a.attribute,
   a.level,
   a.opponent,
@@ -61,10 +62,12 @@ cross join lateral (values
 ) as a(attribute, level, opponent, slot)
 where t.answered and t.first_exposure and not t.informed;
 
--- Q1: how often is the first-rendered option picked?
+-- Q1: how often is the first-rendered option picked? Rows with a null
+-- frame/layout/device_class are rollup totals across that column.
 create view v_position_bias with (security_invoker = true) as
 select
   experiment_version,
+  frame,
   layout,
   device_class,
   count(*) as n,
@@ -76,12 +79,14 @@ select
   round(avg((chosen_slot = 1)::int) filter (where identical_options), 4) as first_share_identical
 from v_trials
 where answered and first_exposure and not informed
-group by rollup (experiment_version, layout, device_class);
+group by rollup (experiment_version, frame, layout, device_class);
 
--- Q2: win rate of each level when its opponent has a different level.
+-- Q2: win rate of each level when its opponent has a different level,
+-- overall (frame is null) and within each frame.
 create view v_attribute_win_rates with (security_invoker = true) as
 select
   experiment_version,
+  frame,
   attribute,
   level,
   count(*) as n,
@@ -91,7 +96,10 @@ select
   wilson_upper(count(*) filter (where won), count(*)) as win_rate_hi
 from v_appearances
 where level <> opponent
-group by experiment_version, attribute, level;
+group by grouping sets (
+  (experiment_version, attribute, level),
+  (experiment_version, frame, attribute, level)
+);
 
 -- Q4: head-to-head matchups, each trial counted once, ranked by how
 -- one-sided they are. Ranking uses the Wilson lower bound so small samples

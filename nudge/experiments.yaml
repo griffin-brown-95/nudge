@@ -27,6 +27,11 @@ factors:
     salt: "b8bd3b93a8ad04cf"
     levels: [base, plus8]
 
+  - name: frame
+    scope: trial
+    salt: "9e6d3388c3b0fd12"
+    levels: [tiles, split]
+
   - name: labels
     scope: trial
     salt: "ab5ba79b5b183017"

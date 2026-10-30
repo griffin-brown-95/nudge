@@ -1,7 +1,7 @@
 # A or B?
 
 A playful "just pick one" page that's really an experiment in how presentation
-nudges choices. The design is in [docs/EXPERIMENT.md](docs/EXPERIMENT.md).
+nudges choices. The design is in [docs/EXPERIMENT.md](docs/EXPERIMENT.md); [docs/LEARNING.md](docs/LEARNING.md) explains how it was designed and built.
 
 ```
 GitHub Pages (/web)  →  nudge API on Cloud Run (/nudge, us-east1)  →  Supabase Postgres (us-east-1)
