@@ -20,6 +20,10 @@ import (
 // (left when side by side, top when stacked).
 const NumSlots = 2
 
+// MaxTrialIndex bounds how far into the sequence a client may ask for or
+// report. It is far beyond any real visitor and only guards against abuse.
+const MaxTrialIndex = 100_000
+
 // Levels maps factor name to level name.
 type Levels map[string]string
 
