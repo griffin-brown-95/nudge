@@ -202,6 +202,26 @@ broken**. Usually one variant is crashing, redirecting or failing to log.
 Platforms run SRM checks automatically and refuse to show results when they
 fail. It's the same chi-square test as `TestBalance`, run on live data.
 
+### Step 9½: Hunt for accidental nudges
+
+The experiment's own interface can bias results. Looking at the first hover
+traces showed that the cursor was already over an option when many trials
+appeared (`started_on_option` in
+[v_choice_traces](../supabase/migrations/20261030000001_choice_traces.sql)):
+
+- In **split** mode the divider is only 6px wide, so a cursor resting near
+  center is almost always on one half. That half lit up with its hover style,
+  a visual nudge nobody designed. **Fix:** hover styling now waits until the
+  pointer moves ([app.js](../web/app.js), `armHoverOnMove`).
+- **Between trials** the cursor stays where it last clicked, so the next
+  trial's option on that side is closer. That's a *carryover* effect. It's
+  recorded rather than prevented, and trial 1 is the clean baseline.
+
+The general lesson: **instrument the experiment itself, then look at the raw
+data early.** On a platform team the same habit catches things like a variant
+that loads 200ms slower, or a button that renders above the fold for one
+group and below it for the other.
+
 ### Step 10: Analyze honestly
 
 The views ([analysis migration](../supabase/migrations/20261029000002_analysis_views.sql))

@@ -52,11 +52,31 @@ const s = {
 };
 
 let lastMouse = null; // last fine-pointer position, as viewport fractions
+let lastMousePx = null;
 addEventListener("pointermove", (e) => {
   if (e.pointerType === "mouse" || e.pointerType === "pen") {
     lastMouse = { x: frac(e.clientX / innerWidth), y: frac(e.clientY / innerHeight) };
+    lastMousePx = { x: e.clientX, y: e.clientY };
   }
 }, { passive: true });
+
+// Hover highlighting stays off until the pointer moves after the options
+// appear. Otherwise whichever option happens to be under a resting cursor
+// lights up on its own: an accidental nudge.
+let disarmHover = () => {};
+function armHoverOnMove() {
+  disarmHover();
+  app.dataset.hover = "off";
+  const start = lastMousePx;
+  const onMove = (e) => {
+    if (e.pointerType !== "mouse" && e.pointerType !== "pen") return;
+    if (start && Math.hypot(e.clientX - start.x, e.clientY - start.y) < 4) return;
+    app.dataset.hover = "on";
+    disarmHover();
+  };
+  addEventListener("pointermove", onMove, { passive: true });
+  disarmHover = () => removeEventListener("pointermove", onMove);
+}
 
 function frac(v) {
   return Math.min(1, Math.max(0, Math.round(v * 1000) / 1000));
@@ -210,6 +230,7 @@ function runTrial(i) {
 
   app.dataset.frame = trial.trial.frame || "tiles";
   setSplitBounds();
+  armHoverOnMove();
   renderOptions(trial);
   show("trial", "Pick one.", primeText());
 

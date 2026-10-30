@@ -121,6 +121,14 @@ Each attribute gets its own column (`opt1_color`, `opt1_emphasis`, `opt1_size`, 
 | Most one-sided test | Rank matchups by the **lower bound** of the 95% confidence interval on the winner's share. A matchup needs at least 30 trials to be ranked. This keeps a 3–0 fluke from beating a solid 70–30. Ranked first by attribute matchup (15 color pairs, 3 emphasis pairs, 1 size pair), then by exact full pair once enough data exists. |
 | Within-person effects | Each visitor does many trials, so confidence intervals are clustered by visitor. Trial 1 is also reported on its own, as the cleanest "first impression." Visitors who pick the same side on almost every trial are flagged. |
 
+## 7a. Known confounds and how they're handled
+
+| Confound | Effect | Handling |
+|---|---|---|
+| **Resting cursor highlights an option** | Whichever option is under a still pointer when a trial appears would show its hover highlight, an unintended nudge. | Fixed 2026-10-30: hover styling waits until the pointer moves. |
+| **Pointer carryover between trials** | After a choice the cursor stays where it clicked, so on the next trial the same side is closer, and often already under the pointer. That favors repeating a side. | Recorded, not prevented: `rendered.pointer` and `v_choice_traces.started_on_option`. Trial 1 (after the centered Ready button) is the clean baseline. A "click the dot to continue" step would remove it at the cost of pace. |
+| **Split-frame size moves the divider** | +8% in split shifts the dividing line about 11px away from the start position. | Inherent to "bigger share of the screen". Analyze size × frame. |
+
 ## 8. Validity tests (Go, run in CI)
 
 - **Determinism:** the same inputs always give the same trial.

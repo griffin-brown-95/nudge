@@ -115,7 +115,22 @@ func TestPostgres(t *testing.T) {
 	if n != 6 {
 		t.Errorf("v_appearances rows for exposure = %d, want 6 (3 attributes × 2 options)", n)
 	}
-	for _, view := range []string{"v_trials", "v_position_bias", "v_attribute_win_rates", "v_matchups"} {
+	// The fixture choice hovers 1, leaves, hovers 2, picks 2 with dwell [510, 1240].
+	var first, switches int
+	var both, changed, startedOn bool
+	var share float64
+	err = conn.QueryRow(ctx, `select first_considered, considered_both, switches, changed_mind,
+		started_on_option, dwell_chosen_share from v_choice_traces where exposure_id = $1`, xid).
+		Scan(&first, &both, &switches, &changed, &startedOn, &share)
+	if err != nil {
+		t.Fatalf("v_choice_traces: %v", err)
+	}
+	if first != 1 || !both || switches != 1 || !changed || startedOn || share < 0.708 || share > 0.709 {
+		t.Errorf("v_choice_traces = first %d, both %v, switches %d, changed %v, started_on %v, share %.4f; "+
+			"want 1, true, 1, true, false, 0.7086", first, both, switches, changed, startedOn, share)
+	}
+
+	for _, view := range []string{"v_trials", "v_position_bias", "v_attribute_win_rates", "v_matchups", "v_trace_summary"} {
 		if _, err := conn.Exec(ctx, "select * from "+view+" limit 1"); err != nil {
 			t.Errorf("%s: %v", view, err)
 		}

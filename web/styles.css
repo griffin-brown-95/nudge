@@ -218,9 +218,10 @@ html, body {
 .app[data-frame="split"] .option:focus-visible,
 .app[data-frame="split"] .option.is-focused { outline-offset: -12px; }
 
-/* Identical feedback for both options so hover can't favor one. */
+/* Identical feedback for both options so hover can't favor one, and only
+   once the pointer has moved (app.js armHoverOnMove). */
 @media (hover: hover) {
-  .option:hover { filter: brightness(1.04); }
+  .app[data-hover="on"] .option:hover { filter: brightness(1.04); }
 }
 .option:focus { outline: none; }
 .option:focus-visible,
