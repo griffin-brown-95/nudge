@@ -105,8 +105,14 @@ https://griffin-brown-95.github.io/nudge/.
 already been applied; add a new one.
 
 ```bash
-supabase db push --db-url "$DATABASE_URL"
+make db-push
 ```
+
+This runs `supabase db push` through the pooler's **session mode** (port
+5432). `DATABASE_URL` uses transaction mode (port 6543), which the service
+needs but which breaks the CLI's prepared statements (`prepared statement
+"lrupsc_1_0" already exists`). `make db-push` swaps the port for you and asks
+before applying anything.
 
 **One-time GCP setup.** Store the DB URL in Secret Manager and let Cloud Run read it:
 
