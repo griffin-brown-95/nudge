@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: nudge
+
+    # Plain Postgres stands in for Supabase. The migrations revoke grants
+    # from Supabase's API roles, so those roles are created first.
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DB_URL: postgresql://postgres:postgres@localhost:5432/postgres
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: nudge/go.mod
+          cache-dependency-path: nudge/go.sum
+
+      - name: gofmt
+        run: test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }
+
+      - name: vet
+        run: go vet ./...
+
+      # Experiment-validity, validation, handler and CORS tests.
+      - name: unit tests
+        run: go test ./...
+
+      - name: apply migrations
+        working-directory: .
+        run: |
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -c "create role anon nologin; create role authenticated nologin;"
+          for f in supabase/migrations/*.sql; do
+            echo "applying $f"
+            psql "$DB_URL" -v ON_ERROR_STOP=1 -q -f "$f"
+          done
+
+      - name: store tests (Postgres)
+        run: go test -count=1 ./internal/store
+        env:
+          NUDGE_TEST_DATABASE_URL: ${{ env.DB_URL }}
+
+      - name: build image
+        run: docker build -t nudge:ci .

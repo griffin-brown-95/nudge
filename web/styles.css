@@ -1,0 +1,203 @@
+@font-face {
+  font-family: "Inter";
+  src: url("fonts/inter-latin-wght-normal.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: block; /* Ready waits for the font, so never show a swap */
+}
+
+:root {
+  --bg: #fafaf9;
+  --fg: #1c1917;
+  --muted: #78716c;
+  --line: #e7e5e4;
+  --accent: #1c1917;
+  --accent-fg: #fafaf9;
+  --ring: #2563eb;
+
+  /* Experiment colors: equal OKLCH lightness and chroma so hue is the only
+     difference. They don't change with the theme. */
+  --opt-l: 0.72;
+  --opt-c: 0.14;
+  --opt-ink: #111;
+
+  --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --radius: 18px;
+  --gap: clamp(16px, 4vw, 40px);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #141210;
+    --fg: #f5f5f4;
+    --muted: #a8a29e;
+    --line: #292524;
+    --accent: #f5f5f4;
+    --accent-fg: #141210;
+    --ring: #60a5fa;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font);
+  -webkit-text-size-adjust: 100%;
+}
+
+.app {
+  min-height: 100dvh;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  padding: max(12px, env(safe-area-inset-top)) 16px max(12px, env(safe-area-inset-bottom));
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 14px;
+  color: var(--muted);
+  min-height: 24px;
+}
+.brand { font-weight: 700; letter-spacing: -0.01em; color: var(--fg); }
+.progress { font-variant-numeric: tabular-nums; }
+
+/* Fixed height so the stage never shifts between screens. */
+.prompt {
+  text-align: center;
+  min-height: 92px;
+  padding-top: 8px;
+}
+.prompt-main {
+  margin: 0;
+  font-size: clamp(26px, 6vw, 38px);
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+.prompt-sub {
+  margin: 6px 0 0;
+  font-size: 16px;
+  color: var(--muted);
+  min-height: 1.4em;
+}
+
+.stage:focus { outline: none; }
+.stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 300px;
+}
+
+.screen { display: none; }
+.app[data-screen="start"] .screen-start,
+.app[data-screen="gap"] .screen-gap,
+.app[data-screen="block"] .screen-block,
+.app[data-screen="done"] .screen-done { display: grid; place-items: center; }
+.app[data-screen="trial"] .screen-trial { display: flex; }
+
+/* --- General buttons (not part of the experiment) --- */
+.btn {
+  font: inherit;
+  font-size: 18px;
+  font-weight: 650;
+  min-height: 52px;
+  min-width: 200px;
+  padding: 0 28px;
+  border-radius: 999px;
+  border: 2px solid var(--accent);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.btn-primary { background: var(--accent); color: var(--accent-fg); }
+.btn-quiet { background: transparent; color: var(--fg); border-color: var(--line); }
+.btn:disabled { opacity: 0.55; cursor: progress; }
+.btn:focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }
+
+.stack { display: grid; gap: 14px; justify-items: center; }
+
+.explain { max-width: 34rem; text-align: center; line-height: 1.55; font-size: 16px; }
+.explain p { margin: 0 0 14px; }
+
+.note {
+  margin: 16px auto 0;
+  max-width: 30rem;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
+/* --- The two options --- */
+.screen-trial {
+  gap: var(--gap);
+  align-items: center;
+  justify-content: center;
+  flex-direction: column; /* stacked on narrow screens */
+  width: 100%;
+  /* Room for two +8% options, which grow into the gap. */
+  gap: max(28px, var(--gap));
+}
+@media (min-width: 560px) {
+  .screen-trial { flex-direction: row; }
+}
+
+.option {
+  --h: 0;          /* hue, set per option */
+  --c: var(--opt-c);
+  --color: oklch(var(--opt-l) var(--c) var(--h));
+
+  font: inherit;
+  font-size: clamp(40px, 9vw, 56px);
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  width: min(80vw, 300px);
+  height: clamp(96px, 22dvh, 160px);
+  border-radius: var(--radius);
+  border: 2px solid transparent;
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  /* Scaling keeps both options' centers where the base layout put them. */
+  transform: scale(var(--scale, 1));
+}
+@media (min-width: 560px) {
+  .option { width: min(38vw, 280px); height: 170px; }
+}
+
+.option[data-color="red"]    { --h: 25; }
+.option[data-color="orange"] { --h: 60; }
+.option[data-color="green"]  { --h: 145; }
+.option[data-color="blue"]   { --h: 250; }
+.option[data-color="purple"] { --h: 305; }
+.option[data-color="gray"]   { --h: 0; --c: 0; }
+
+.option[data-emphasis="solid"]   { background: var(--color); color: var(--opt-ink); }
+.option[data-emphasis="soft"]    { background: oklch(var(--opt-l) var(--c) var(--h) / 0.3); color: var(--fg); }
+.option[data-emphasis="outline"] { background: transparent; border-color: var(--color); color: var(--fg); }
+
+.option[data-size="plus8"] { --scale: 1.08; }
+
+/* Identical feedback for both options so hover can't favor one. */
+@media (hover: hover) {
+  .option:hover { filter: brightness(1.04); }
+}
+.option:focus { outline: none; }
+.option:focus-visible,
+.option.is-focused { outline: 3px solid var(--ring); outline-offset: 4px; }
+.option:disabled { cursor: default; }
