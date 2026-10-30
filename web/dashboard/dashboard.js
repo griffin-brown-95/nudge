@@ -1,7 +1,7 @@
 // Live results dashboard. Reads GET /stats (computed and cached by the API)
 // and renders it. Results below the API's minimum sample arrive without a
 // rate, and are drawn as "collecting data".
-import { API_BASE } from "../config.js";
+import { API_BASE } from "../config.js?v=__BUILD__";
 
 const REFRESH_MS = 60_000;
 const $ = (id) => document.getElementById(id);
