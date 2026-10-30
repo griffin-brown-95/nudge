@@ -240,10 +240,35 @@ function counterText(pick) {
   return `Pick ${pick}`;
 }
 
+// The "Keep going?" check-in only follows a visitor's first block (picks
+// 1–10, ever). After that, play flows straight through: the next block is
+// fetched a few picks early so crossing a block boundary is just a normal gap.
+let upcoming = null;
+
+function fetchNextBlock() {
+  const start = s.block[s.block.length - 1].index + 1;
+  const count = s.blockSize - (start % s.blockSize);
+  if (s.offline) return Promise.resolve(offlineBlock(start, count));
+  return fetchTrials(start, count)
+    .then((d) => {
+      if (d.version !== s.version) throw new Error("experiment version changed");
+      return d.trials;
+    })
+    .catch((err) => {
+      console.warn("nudge: API unavailable, playing offline (not logged)", err);
+      s.offline = true;
+      return offlineBlock(start, count);
+    });
+}
+
 function runTrial(i) {
   const trial = s.block[i];
   const renderStart = performance.now();
   $("progress").textContent = counterText(trial.index + 1);
+  const last = s.block[s.block.length - 1];
+  if (!upcoming && last.block !== 0 && i === Math.max(0, s.block.length - 3)) {
+    upcoming = fetchNextBlock();
+  }
 
   app.dataset.frame = trial.trial.frame || "tiles";
   setSplitBounds();
@@ -313,11 +338,21 @@ function runTrial(i) {
     progress.next = trial.index + 1;
     storage.setJSON("nudge.progress", progress);
 
-    if (i + 1 >= s.block.length) {
-      blockEnd(trial.block);
-    } else {
+    if (i + 1 < s.block.length) {
       show("gap", "Pick one.", primeText());
       setTimeout(() => runTrial(i + 1), GAP_MS);
+    } else if (trial.block === 0) {
+      blockEnd(trial.block);
+    } else {
+      // Block boundary: same gap as usual, held open only if the next block
+      // is still on its way.
+      show("gap", "Pick one.", primeText());
+      const next = upcoming || fetchNextBlock();
+      upcoming = null;
+      Promise.all([next, new Promise((r) => setTimeout(r, GAP_MS))]).then(([trials]) => {
+        s.block = trials;
+        runTrial(0);
+      });
     }
   };
   buttons.forEach((b) => b.addEventListener("click", onClick));
