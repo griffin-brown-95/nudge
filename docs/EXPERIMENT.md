@@ -15,7 +15,7 @@ We don't show any results to visitors yet. A stats and results module comes late
 ## 2. Visitor flow
 
 ```
-Start screen                      Trial (×10)                       Block end
+Start screen                      Trial (first 10)                  Check-in (once)
 ┌──────────────────────────┐      ┌──────────────────────────┐      ┌──────────────────────────┐
 │  A or B?                 │      │  Pick one.               │      │  Keep going?             │
 │  [prime text, if any]    │ ───▶ │  ┌────────┐  ┌────────┐  │ ───▶ │  [ Keep going ]          │
@@ -29,7 +29,7 @@ Start screen                      Trial (×10)                       Block end
 - Ready stays disabled until the brand font has loaded. Otherwise a late font swap would throw off the timing.
 - **Timing:** the clock starts at render (after two `requestAnimationFrame` calls) and stops at the click or tap event's `timeStamp`.
 - The corner counter shows the running pick number ("Pick 13"); see the joke counter in §7a.
-- After every 10 trials the visitor sees **Keep going?** with *Keep going* / *I'm done*. Keep going continues for as long as they like; the check-in isn't presented as a fixed count.
+- After a visitor's **first 10 picks ever**, they see **Keep going?** with *Keep going* / *I'm done*. That's the only check-in: after Keep going, trials flow without interruption for as long as they like (the next 10 are fetched a few picks early, so block boundaries look like any other gap). Returning visitors past pick 10 never see it.
 - **I'm done** shows a thank-you screen with a short note on what was varied (no numbers). If they continue after that, their trials are flagged `informed = true`, so analysis can separate them out.
 - **Returning visitors** pick up at their next trial number. They keep their visitor-level conditions.
 
@@ -102,7 +102,7 @@ value = SHA-256(version ‖ salt(attribute) ‖ visitor_id ‖ trial_index ‖ s
 | `session_start` | Ready is clicked | prime, start pointer position, whether fonts were ready, session number and days since first visit (for daily returners) |
 | `exposure` | a trial renders | trial_index, block_index, both options' attributes, labels, label_order, focus, layout, pointer position at render, informed |
 | `choice` | an option is picked | exposure_id, chosen_slot (1 or 2), latency_ms, input type, interaction trace (hover and dwell, or touch, scroll and tap position) |
-| `block_end` | after each 10th choice | action: keep_going or done |
+| `block_end` | at the one check-in, after the first 10 picks | action: keep_going or done (block 0 only) |
 
 Every event also carries: device class, pointer type, viewport size, orientation, layout, light or dark theme, referrer domain, local hour and experiment version.
 
