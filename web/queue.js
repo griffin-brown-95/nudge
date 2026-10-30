@@ -7,8 +7,8 @@
 //   400/413/415 invalid or stale  -> drop (retrying can't help)
 //   409        parent not stored -> retry later (a few times, then drop)
 //   429/5xx/network               -> retry later with backoff
-import { API_BASE } from "./config.js";
-import { storage } from "./storage.js";
+import { API_BASE } from "./config.js?v=__BUILD__";
+import { storage } from "./storage.js?v=__BUILD__";
 
 const KEY = "nudge.queue";
 const MAX_QUEUE = 1000;

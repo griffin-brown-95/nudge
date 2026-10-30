@@ -26,6 +26,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      # Stamp every module and stylesheet URL with this commit, so a returning
+      # visitor never mixes freshly deployed files with stale cached ones
+      # (Pages lets browsers cache for 10 minutes).
+      - name: Stamp asset URLs with the build
+        run: |
+          BUILD="${GITHUB_SHA::8}"
+          grep -rl "__BUILD__" web | xargs sed -i "s/__BUILD__/${BUILD}/g"
+          ! grep -rn "__BUILD__" web
       - uses: actions/upload-pages-artifact@v3
         with:
           path: web

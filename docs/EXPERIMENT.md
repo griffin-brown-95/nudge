@@ -31,7 +31,8 @@ Start screen                      Trial (first 10)                  Check-in (on
 - The corner counter shows the running pick number ("Pick 13"); see the joke counter in §7a.
 - After a visitor's **first 10 picks ever**, they see **Keep going?** with *Keep going* / *I'm done*. That's the only check-in: after Keep going, trials flow without interruption for as long as they like (the next 10 are fetched a few picks early, so block boundaries look like any other gap). Returning visitors past pick 10 never see it.
 - **I'm done** shows a thank-you screen with a short note on what was varied (no numbers). If they continue after that, their trials are flagged `informed = true`, so analysis can separate them out.
-- **Returning visitors** pick up at their next trial number. They keep their visitor-level conditions.
+- **Returning visitors** pick up at their next trial number. They keep their visitor-level conditions. The random visitor ID lives in the browser's `localStorage`, which the page's note discloses.
+- **Start over** (visible except during trials) clears the visitor ID, pick count and session history, so the next pick belongs to a new visitor. The `informed` flag is kept on purpose: someone who read the explanation still knows what's being tested.
 
 ## 3. What gets randomized
 

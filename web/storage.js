@@ -25,6 +25,14 @@ export const storage = {
       return fallback;
     }
   },
+  remove(key) {
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      /* storage unavailable: fall through to memory */
+    }
+    memory.delete(key);
+  },
   setJSON(key, value) {
     this.set(key, JSON.stringify(value));
   },

@@ -132,6 +132,12 @@ Settings → Pages → Source must be **GitHub Actions**.
 
 ### Privacy
 
+The browser keeps a random visitor ID and the pick count in `localStorage`
+(not a cookie: it's never sent automatically and other sites can't read it),
+so returning players resume where they left off and keep their conditions.
+The page says so, and **Start over** clears the ID, count and session history
+to begin as a new, unlinked visitor.
+
 No IPs are stored by `nudge`, and the rate limiter keeps them only in memory.
 Cloud Run's own request logs record client IPs, so they're dropped before
 storage by a Cloud Logging exclusion on the `_Default` sink (added 2026-10-30):

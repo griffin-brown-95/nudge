@@ -7,8 +7,8 @@
   <meta name="description" content="Just pick one. A tiny anonymous experiment.">
   <meta name="color-scheme" content="light dark">
   <link rel="preload" href="fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css">
-  <script type="module" src="app.js"></script>
+  <link rel="stylesheet" href="styles.css?v=__BUILD__">
+  <script type="module" src="app.js?v=__BUILD__"></script>
 </head>
 <body>
   <main class="app" id="app" data-screen="start">
@@ -55,7 +55,9 @@
     </div>
 
     <footer class="note">
-      Clicks are logged anonymously for a fun experiment: no names, no IP addresses, no tracking cookies.
+      Picks are logged anonymously for a fun experiment. Your browser keeps a random ID so you can
+      pick up where you left off. No names, no IP addresses, no cookies.
+      <button class="start-over" id="start-over" type="button">Start over</button>
     </footer>
   </main>
 </body>

@@ -1,8 +1,8 @@
-import { API_BASE, GAP_MS, TRIALS_TIMEOUT_MS } from "./config.js";
-import { context, measureLayout, pointerType } from "./context.js";
-import { enqueue, flush } from "./queue.js";
-import { storage, uuid } from "./storage.js";
-import { startTrace } from "./trace.js";
+import { API_BASE, GAP_MS, TRIALS_TIMEOUT_MS } from "./config.js?v=__BUILD__";
+import { context, measureLayout, pointerType } from "./context.js?v=__BUILD__";
+import { enqueue, flush } from "./queue.js?v=__BUILD__";
+import { storage, uuid } from "./storage.js?v=__BUILD__";
+import { startTrace } from "./trace.js?v=__BUILD__";
 
 const $ = (id) => document.getElementById(id);
 const app = $("app");
@@ -397,5 +397,17 @@ $("done").addEventListener("click", () => {
 });
 
 $("play-more").addEventListener("click", (e) => continuePlaying(e.currentTarget));
+
+// Start over: forget this browser's random ID and progress, so the next
+// picks belong to a new, unlinked visitor. Two things are kept on purpose:
+// the event queue (picks already made still get delivered) and the informed
+// flag (someone who read the explanation still knows what's being tested).
+$("start-over").addEventListener("click", () => {
+  if (!confirm("Start over? Your pick count resets and your browser gets a new random ID.")) return;
+  for (const key of ["nudge.vid", "nudge.progress", "nudge.firstSeen", "nudge.sessions"]) {
+    storage.remove(key);
+  }
+  location.reload();
+});
 
 init();
