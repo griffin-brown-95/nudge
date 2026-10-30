@@ -133,9 +133,12 @@ html, body {
   line-height: 1.45;
   color: var(--muted);
 }
+/* The note (and its Start over link) only appears on the start screen. It's
+   hidden rather than removed, so the stage keeps the same height and the
+   options stay centered on the spot where the Ready button was. */
+.app:not([data-screen="start"]) .note { visibility: hidden; }
 
-/* A text-style button with a full-size tap target. Hidden (not removed)
-   during trials so it can't be hit by accident and the layout never shifts. */
+/* A text-style button with a full-size tap target. */
 .start-over {
   font: inherit;
   color: var(--fg);
@@ -149,8 +152,6 @@ html, body {
   touch-action: manipulation;
 }
 .start-over:focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; border-radius: 4px; }
-.app[data-screen="trial"] .start-over,
-.app[data-screen="gap"] .start-over { visibility: hidden; }
 
 .dot {
   width: 10px;
