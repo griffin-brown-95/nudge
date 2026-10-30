@@ -12,3 +12,6 @@
 .DS_Store
 .idea/
 .vscode/
+
+# Personal notes, kept local
+docs/LEARNING.md
