@@ -169,7 +169,7 @@ async function init() {
   show("start", "Just pick one.", "Loading…");
   const ready = $("ready");
   [fontsOK] = await Promise.all([fontsReady(), loadBlock()]);
-  show("start", "Just pick one.", primeText() || "Ten quick choices. No right answers.");
+  show("start", "Just pick one.", primeText() || "Quick choices. No right answers.");
   ready.textContent = "Are you ready?";
   ready.disabled = false;
   ready.focus({ preventScroll: true });
@@ -315,7 +315,7 @@ function blockEnd(blockIndex) {
   endedBlock = blockIndex;
   $("progress").textContent = "";
   nextBlock = loadBlock(); // fetch while they decide
-  show("block", `That's ${s.blockSize}!`, `Keep going for another ${s.blockSize}?`);
+  show("block", "Keep going?");
   $("keep-going").focus({ preventScroll: true });
 }
 

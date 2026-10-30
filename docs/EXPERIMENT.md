@@ -17,7 +17,7 @@ We don't show any results to visitors yet. A stats and results module comes late
 ```
 Start screen                      Trial (×10)                       Block end
 ┌──────────────────────────┐      ┌──────────────────────────┐      ┌──────────────────────────┐
-│  A or B?                 │      │  Pick one.               │      │  That's 10!              │
+│  A or B?                 │      │  Pick one.               │      │  Keep going?             │
 │  [prime text, if any]    │ ───▶ │  ┌────────┐  ┌────────┐  │ ───▶ │  [ Keep going ]          │
 │     [ Are you ready? ]   │      │  │   A    │  │   B    │  │      │  [ I'm done ]            │
 │  clicks logged anonymously│     │  └────────┘  └────────┘  │      └──────────────────────────┘
@@ -28,7 +28,7 @@ Start screen                      Trial (×10)                       Block end
 - **"Are you ready?"** is centered horizontally. On desktop, that puts the pointer the same distance from both options when trial 1 appears. The pointer's position at render is logged anyway.
 - Ready stays disabled until the brand font has loaded. Otherwise a late font swap would throw off the timing.
 - **Timing:** the clock starts at render (after two `requestAnimationFrame` calls) and stops at the click or tap event's `timeStamp`.
-- **Keep going** starts another block of 10 trials. There is no limit.
+- After every 10 trials the visitor sees **Keep going?** with *Keep going* / *I'm done*. Keep going continues for as long as they like; the check-in isn't presented as a fixed count.
 - **I'm done** shows a thank-you screen with a short note on what was varied (no numbers). If they continue after that, their trials are flagged `informed = true`, so analysis can separate them out.
 - **Returning visitors** pick up at their next trial number. They keep their visitor-level conditions.
 
