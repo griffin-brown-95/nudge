@@ -138,6 +138,10 @@ so returning players resume where they left off and keep their conditions.
 The page says so, and **Start over** clears the ID, count and session history
 to begin as a new, unlinked visitor.
 
+Supabase's Data API exposes only the intentionally empty `api` schema (see
+`supabase/migrations/20261030000003_empty_api_schema.sql`), so `/rest/v1/`
+serves nothing. Never add objects to that schema.
+
 No IPs are stored by `nudge`, and the rate limiter keeps them only in memory.
 Cloud Run's own request logs record client IPs, so they're dropped before
 storage by a Cloud Logging exclusion on the `_Default` sink (added 2026-10-30):
