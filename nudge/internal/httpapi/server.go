@@ -74,7 +74,9 @@ func (s *Server) Handler() http.Handler {
 	if s.opts.Stats != nil {
 		mux.Handle("GET /stats", s.limit(http.HandlerFunc(s.stats)))
 	}
-	mux.HandleFunc("OPTIONS /", func(w http.ResponseWriter, r *http.Request) {}) // answered by cors
+	// No OPTIONS route: cors answers every preflight before the mux. A
+	// catch-all "OPTIONS /" would also make the mux answer 405 instead of 404
+	// for unknown paths.
 	return s.logRequests(s.cors(mux))
 }
 
