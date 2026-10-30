@@ -74,20 +74,40 @@ local DB can be reset completely with `make db-reset`.
 4. The new factor is stored in the `conditions` jsonb column right away. To give it a column of its own, add a migration and a line in `internal/store/postgres.go`.
 5. Render it in the frontend. Exposures are rejected unless the client reports exactly what it was assigned.
 
-## Deploying (Cloud Run, us-east1)
+## Deploying
 
-Placeholders: `<gcp-project>`, `<pages-origin>`.
+Live setup: GCP project `nudge-513203` (number `370784999851`), Cloud Run
+service `nudge` in `us-east1`, frontend on GitHub Pages at
+https://griffin-brown-95.github.io/nudge/.
+
+**Database migrations** (hosted Supabase). Never edit a migration that has
+already been applied; add a new one.
 
 ```bash
-supabase link --project-ref "$SUPABASE_PROJECT_REF"
-supabase db push                                   # apply migrations to the hosted DB
+supabase db push --db-url "$DATABASE_URL"
+```
 
-gcloud secrets create nudge-database-url --data-file=- <<< "$DATABASE_URL"
-gcloud run deploy nudge --source nudge --region us-east1 --project <gcp-project> \
+**One-time GCP setup.** Store the DB URL in Secret Manager and let Cloud Run read it:
+
+```bash
+grep '^DATABASE_URL=' .env | cut -d= -f2- | tr -d '\n' | gcloud secrets create nudge-database-url --replication-policy=automatic --data-file=-
+gcloud secrets add-iam-policy-binding nudge-database-url \
+  --member=serviceAccount:370784999851-compute@developer.gserviceaccount.com \
+  --role=roles/secretmanager.secretAccessor
+```
+
+**Deploy the API:**
+
+```bash
+gcloud run deploy nudge --source nudge --region us-east1 --project nudge-513203 \
   --allow-unauthenticated --min-instances 0 --max-instances 3 \
-  --set-env-vars ALLOWED_ORIGIN=<pages-origin> \
+  --set-env-vars ALLOWED_ORIGIN=https://griffin-brown-95.github.io \
   --set-secrets DATABASE_URL=nudge-database-url:latest
 ```
+
+**Frontend:** merging changes under `web/` to `main` publishes them through
+[.github/workflows/pages.yml](.github/workflows/pages.yml). The repo's
+Settings → Pages → Source must be **GitHub Actions**.
 
 ### Privacy
 

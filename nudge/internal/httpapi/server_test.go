@@ -76,14 +76,14 @@ func errCode(rec *httptest.ResponseRecorder) string {
 	return b.Error
 }
 
-func TestHealthz(t *testing.T) {
+func TestHealth(t *testing.T) {
 	h := newHarness(t)
-	wantStatus(t, h.do("GET", "/healthz", "", nil, ""), 200)
-	wantStatus(t, h.do("GET", "/healthz?deep=1", "", nil, ""), 200)
+	wantStatus(t, h.do("GET", "/health", "", nil, ""), 200)
+	wantStatus(t, h.do("GET", "/health?deep=1", "", nil, ""), 200)
 
 	down := newHarness(t, func(o *Options) { o.Store = failingStore{} })
-	wantStatus(t, down.do("GET", "/healthz", "", nil, ""), 200) // liveness doesn't need the DB
-	wantStatus(t, down.do("GET", "/healthz?deep=1", "", nil, ""), 503)
+	wantStatus(t, down.do("GET", "/health", "", nil, ""), 200) // liveness doesn't need the DB
+	wantStatus(t, down.do("GET", "/health?deep=1", "", nil, ""), 503)
 }
 
 func TestTrials(t *testing.T) {
@@ -265,7 +265,7 @@ func TestRateLimit(t *testing.T) {
 	if rec.Header().Get("Retry-After") == "" {
 		t.Error("missing Retry-After")
 	}
-	wantStatus(t, h.do("GET", "/healthz", "", nil, ""), 200) // health checks are never limited
+	wantStatus(t, h.do("GET", "/health", "", nil, ""), 200) // health checks are never limited
 }
 
 func TestLimiterRefillsAndForgets(t *testing.T) {

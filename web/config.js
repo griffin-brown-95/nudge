@@ -3,7 +3,7 @@ const LOCAL = ["localhost", "127.0.0.1"].includes(location.hostname);
 
 export const API_BASE = LOCAL
   ? "http://localhost:8080"
-  : "https://nudge-REPLACE-ME.us-east1.run.app"; // TODO: Cloud Run URL after first deploy
+  : "https://nudge-370784999851.us-east1.run.app"; // Cloud Run, project nudge-513203
 
 // How long to wait for /trials before falling back to unlogged offline trials.
 export const TRIALS_TIMEOUT_MS = 8000;
