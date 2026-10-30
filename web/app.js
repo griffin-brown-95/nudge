@@ -23,6 +23,7 @@ const OFFLINE_LEVELS = {
     size: ["base", "plus8"],
   },
   trial: {
+    frame: ["tiles", "split"],
     labels: ["letters", "numbers", "none"],
     label_order: ["normal", "reversed"],
     default_focus: ["none", "first", "second"],
@@ -51,11 +52,31 @@ const s = {
 };
 
 let lastMouse = null; // last fine-pointer position, as viewport fractions
+let lastMousePx = null;
 addEventListener("pointermove", (e) => {
   if (e.pointerType === "mouse" || e.pointerType === "pen") {
     lastMouse = { x: frac(e.clientX / innerWidth), y: frac(e.clientY / innerHeight) };
+    lastMousePx = { x: e.clientX, y: e.clientY };
   }
 }, { passive: true });
+
+// Hover highlighting stays off until the pointer moves after the options
+// appear. Otherwise whichever option happens to be under a resting cursor
+// lights up on its own: an accidental nudge.
+let disarmHover = () => {};
+function armHoverOnMove() {
+  disarmHover();
+  app.dataset.hover = "off";
+  const start = lastMousePx;
+  const onMove = (e) => {
+    if (e.pointerType !== "mouse" && e.pointerType !== "pen") return;
+    if (start && Math.hypot(e.clientX - start.x, e.clientY - start.y) < 4) return;
+    app.dataset.hover = "on";
+    disarmHover();
+  };
+  addEventListener("pointermove", onMove, { passive: true });
+  disarmHover = () => removeEventListener("pointermove", onMove);
+}
 
 function frac(v) {
   return Math.min(1, Math.max(0, Math.round(v * 1000) / 1000));
@@ -192,12 +213,24 @@ function renderOptions(trial) {
   });
 }
 
+// In the split frame the options fill the stage's band edge to edge, so the
+// Ready button and the dot still sit exactly on the line between them.
+function setSplitBounds() {
+  const r = $("stage").getBoundingClientRect();
+  app.style.setProperty("--split-top", `${Math.round(r.top)}px`);
+  app.style.setProperty("--split-bottom", `${Math.round(innerHeight - r.bottom)}px`);
+}
+addEventListener("resize", setSplitBounds);
+
 function runTrial(i) {
   const trial = s.block[i];
   const renderStart = performance.now();
   const pos = trial.index % s.blockSize;
   $("progress").textContent = `${pos + 1} / ${s.blockSize}`;
 
+  app.dataset.frame = trial.trial.frame || "tiles";
+  setSplitBounds();
+  armHoverOnMove();
   renderOptions(trial);
   show("trial", "Pick one.", primeText());
 

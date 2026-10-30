@@ -48,6 +48,7 @@ Every option uses **one brand font** (self-hosted, so no Google Fonts requests),
 ### Per trial (applies to both options)
 | Factor | Levels | Notes |
 |---|---|---|
+| `frame` | tiles, split | **tiles**: two buttons in the middle of the screen. **split**: each option fills half of the play area, left/right or top/bottom. In split, `size` +8% means a 52/48 share of the screen instead of a scale. Added 2026-10-29 to test whether nudges survive when the targets are huge. |
 | `labels` | letters (A/B), numbers (1/2), none | With no labels, options differ only in color, emphasis and size. |
 | `label_order` | normal (A, then B), reversed (B, then A) | Answers "do people favor A or 1?" separately from position. |
 | `default_focus` | none, first, second | The focused option is the one that answers Enter. |
@@ -60,7 +61,7 @@ Every option uses **one brand font** (self-hosted, so no Google Fonts requests),
 **Dropped for now:** `social_proof`, which moves to the future results module. The old warm/cool `color` factor is also gone, replaced by the hue attribute above.
 
 ### Variety
-There are 6 × 3 × 2 = 36 possible looks per option, which makes 1,296 ordered pairs. Labels, label order and focus multiply that to about 23,000 different screens, so a visitor doing 50 trials will rarely see a repeat.
+There are 6 × 3 × 2 = 36 possible looks per option, which makes 1,296 ordered pairs. Frame, labels, label order and focus multiply that to about 47,000 different screens, so a visitor doing 50 trials will rarely see a repeat.
 
 ## 3a. How much data we need
 
@@ -119,6 +120,14 @@ Each attribute gets its own column (`opt1_color`, `opt1_emphasis`, `opt1_size`, 
 | Optimal layout | A conditional logit model: P(pick option 1) = logistic(position + Σ effect × (opt1 level − opt2 level)). Every attribute is estimated at once. The best layout takes the best level of each attribute. |
 | Most one-sided test | Rank matchups by the **lower bound** of the 95% confidence interval on the winner's share. A matchup needs at least 30 trials to be ranked. This keeps a 3–0 fluke from beating a solid 70–30. Ranked first by attribute matchup (15 color pairs, 3 emphasis pairs, 1 size pair), then by exact full pair once enough data exists. |
 | Within-person effects | Each visitor does many trials, so confidence intervals are clustered by visitor. Trial 1 is also reported on its own, as the cleanest "first impression." Visitors who pick the same side on almost every trial are flagged. |
+
+## 7a. Known confounds and how they're handled
+
+| Confound | Effect | Handling |
+|---|---|---|
+| **Resting cursor highlights an option** | Whichever option is under a still pointer when a trial appears would show its hover highlight, an unintended nudge. | Fixed 2026-10-30: hover styling waits until the pointer moves. |
+| **Pointer carryover between trials** | After a choice the cursor stays where it clicked, so on the next trial the same side is closer, and often already under the pointer. That favors repeating a side. | Recorded, not prevented: `rendered.pointer` and `v_choice_traces.started_on_option`. Trial 1 (after the centered Ready button) is the clean baseline. A "click the dot to continue" step would remove it at the cost of pace. |
+| **Split-frame size moves the divider** | +8% in split shifts the dividing line about 11px away from the start position. | Inherent to "bigger share of the screen". Analyze size × frame. |
 
 ## 8. Validity tests (Go, run in CI)
 

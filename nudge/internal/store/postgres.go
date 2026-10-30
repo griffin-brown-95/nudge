@@ -113,10 +113,10 @@ func (p *Postgres) InsertSessionStart(ctx context.Context, e *events.SessionStar
 var exposureSQL = `
 insert into exposures (id, session_id, visitor_id, experiment_version, trial_index, block_index,
   opt1_color, opt1_emphasis, opt1_size, opt2_color, opt2_emphasis, opt2_size,
-  labels, label_order, default_focus, prime, conditions, rendered, informed, ` + ctxCols + `)
+  frame, labels, label_order, default_focus, prime, conditions, rendered, informed, ` + ctxCols + `)
 select $1::uuid, s.id, s.visitor_id, $4, $5, $6,
   $7, $8, $9, $10, $11, $12,
-  $13, $14, $15, $16, $17::jsonb, $18::jsonb, $19, ` + placeholders(20, 9) + `
+  $13, $14, $15, $16, $17, $18::jsonb, $19::jsonb, $20, ` + placeholders(21, 9) + `
 from sessions s where s.id = $2::uuid and s.visitor_id = $3::uuid
 on conflict (id) do nothing`
 
@@ -136,7 +136,7 @@ func (p *Postgres) InsertExposure(ctx context.Context, e *events.Exposure) error
 		e.Trial.Index, e.Trial.Block,
 		level(o1, "color"), level(o1, "emphasis"), level(o1, "size"),
 		level(o2, "color"), level(o2, "emphasis"), level(o2, "size"),
-		level(tr, "labels"), level(tr, "label_order"), level(tr, "default_focus"),
+		level(tr, "frame"), level(tr, "labels"), level(tr, "label_order"), level(tr, "default_focus"),
 		level(e.Visitor, "prime"), conds, rendered, e.Informed},
 		ctxArgs(e.Ctx)...)
 	return p.insertChild(ctx, exposureSQL, args,

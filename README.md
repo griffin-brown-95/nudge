@@ -1,7 +1,7 @@
 # A or B?
 
 A playful "just pick one" page that's really an experiment in how presentation
-nudges choices. The design is in [docs/EXPERIMENT.md](docs/EXPERIMENT.md).
+nudges choices. The design is in [docs/EXPERIMENT.md](docs/EXPERIMENT.md); [docs/LEARNING.md](docs/LEARNING.md) explains how it was designed and built.
 
 ```
 GitHub Pages (/web)  →  nudge API on Cloud Run (/nudge, us-east1)  →  Supabase Postgres (us-east-1)
@@ -62,6 +62,8 @@ local DB can be reset completely with `make db-reset`.
 | `v_position_bias` | How often the first-rendered option wins, by layout and device |
 | `v_attribute_win_rates` | Each color, emphasis and size level's win rate when contested |
 | `v_matchups` | Head-to-heads, ranked by how one-sided they are (min 30 trials) |
+| `v_choice_traces` | Per choice: first option considered, switches, changed mind, hover share on the winner |
+| `v_trace_summary` | Decision style by frame and input: median time, how often people look at both, change their mind |
 | `v_trials`, `v_appearances` | Building blocks for your own queries |
 
 ## Adding or changing a factor

@@ -193,9 +193,35 @@ html, body {
 
 .option[data-size="plus8"] { --scale: 1.08; }
 
-/* Identical feedback for both options so hover can't favor one. */
+/* --- Split frame: each option fills its half of the play area --- */
+.app[data-screen="trial"][data-frame="split"] .screen-trial {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: var(--split-top, 140px);
+  bottom: var(--split-bottom, 64px);
+  width: auto;
+  gap: 6px;
+  align-items: stretch;
+}
+.app[data-frame="split"] .option {
+  /* "+8%" becomes a share of the screen: 1.08 : 1 is a 52/48 split. */
+  flex: var(--grow, 1) 1 0;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  border-width: 5px;
+  transform: none;
+  font-size: clamp(56px, 12vw, 96px);
+}
+.app[data-frame="split"] .option[data-size="plus8"] { --grow: 1.08; }
+.app[data-frame="split"] .option:focus-visible,
+.app[data-frame="split"] .option.is-focused { outline-offset: -12px; }
+
+/* Identical feedback for both options so hover can't favor one, and only
+   once the pointer has moved (app.js armHoverOnMove). */
 @media (hover: hover) {
-  .option:hover { filter: brightness(1.04); }
+  .app[data-hover="on"] .option:hover { filter: brightness(1.04); }
 }
 .option:focus { outline: none; }
 .option:focus-visible,
