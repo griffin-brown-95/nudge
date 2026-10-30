@@ -1,7 +1,7 @@
 # Common tasks. Targets that talk to a database read it from .env.
 LOCAL_DB := postgresql://postgres:postgres@127.0.0.1:54322/postgres
 
-.PHONY: test test-db db db-reset run run-local run-memory web simulate wipe
+.PHONY: test test-db db db-reset db-push run run-local run-memory web simulate wipe
 
 test:            ## unit + experiment-validity tests (no database needed)
 	cd nudge && go vet ./... && go test ./...
@@ -14,6 +14,10 @@ db:              ## start the local Supabase Postgres (applies migrations on fir
 
 db-reset:        ## rebuild the local DB from migrations (deletes local data)
 	supabase db reset
+
+db-push:         ## apply new migrations to the hosted DB (session-mode pooler; asks first)
+	set -a && . ./.env && set +a && \
+	  supabase db push --db-url "$$(printf '%s' "$$DATABASE_URL" | sed 's#:6543/#:5432/#')"
 
 run:             ## run the API against DATABASE_URL from .env
 	set -a && . ./.env && set +a && cd nudge && go run ./cmd/nudge
