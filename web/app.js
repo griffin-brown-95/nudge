@@ -10,7 +10,6 @@ const buttons = [$("opt1"), $("opt2")];
 
 const PRIMES = {
   gut: "Go with your gut.",
-  careful: "Think carefully before choosing.",
 };
 const LABELS = { letters: ["A", "B"], numbers: ["1", "2"], none: ["", ""] };
 
