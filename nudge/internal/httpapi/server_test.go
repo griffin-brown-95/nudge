@@ -16,6 +16,7 @@ import (
 	"nudge/internal/config"
 	"nudge/internal/events"
 	"nudge/internal/fixture"
+	"nudge/internal/stats"
 	"nudge/internal/store"
 )
 
@@ -37,7 +38,8 @@ func newHarness(t *testing.T, opts ...func(*Options)) *harness {
 	}
 	a := assign.New(cfg)
 	mem := store.NewMemory()
-	o := Options{Assigner: a, BlockSize: cfg.BlockSize, Store: mem, AllowedOrigins: []string{pagesOrigin, "http://localhost:8000"}}
+	o := Options{Assigner: a, BlockSize: cfg.BlockSize, Store: mem, Config: cfg, Stats: mem,
+		AllowedOrigins: []string{pagesOrigin, "http://localhost:8000"}}
 	for _, f := range opts {
 		f(&o)
 	}
@@ -300,6 +302,65 @@ func TestClientIP(t *testing.T) {
 	if got := clientIP(r); got != "203.0.113.9" {
 		t.Errorf("spoofable leftmost entry used: got %q", got)
 	}
+}
+
+func TestStats(t *testing.T) {
+	counter := &countingStats{}
+	h := newHarness(t, func(o *Options) { o.Stats = counter })
+
+	rec := h.do("GET", "/stats", pagesOrigin, nil, "")
+	wantStatus(t, rec, 200)
+	var snap stats.Snapshot
+	if err := json.Unmarshal(rec.Body.Bytes(), &snap); err != nil {
+		t.Fatal(err)
+	}
+	if snap.Version != h.cfg.Version || snap.MinN != stats.MinN {
+		t.Errorf("snapshot version/min_n = %d/%d", snap.Version, snap.MinN)
+	}
+	if rec.Header().Get("Access-Control-Allow-Origin") != pagesOrigin {
+		t.Error("dashboard origin not allowed")
+	}
+	if !strings.HasPrefix(rec.Header().Get("Cache-Control"), "public, max-age=") {
+		t.Errorf("Cache-Control = %q", rec.Header().Get("Cache-Control"))
+	}
+
+	// Within the TTL, repeat requests are served from cache.
+	for range 5 {
+		wantStatus(t, h.do("GET", "/stats", pagesOrigin, nil, ""), 200)
+	}
+	if counter.calls != 1 {
+		t.Errorf("store queried %d times, want 1 (cached)", counter.calls)
+	}
+
+	wantStatus(t, h.do("GET", "/stats", "https://evil.example", nil, ""), 403)
+	wantStatus(t, h.do("POST", "/stats", pagesOrigin, nil, "application/json"), 405)
+}
+
+func TestStatsUnavailable(t *testing.T) {
+	h := newHarness(t, func(o *Options) { o.Stats = &countingStats{err: errDown} })
+	rec := h.do("GET", "/stats", pagesOrigin, nil, "")
+	wantStatus(t, rec, 503)
+	if errCode(rec) != "stats_unavailable" {
+		t.Errorf("error = %q", errCode(rec))
+	}
+
+	off := newHarness(t, func(o *Options) { o.Stats = nil })
+	if rec := off.do("GET", "/stats", pagesOrigin, nil, ""); rec.Code == 200 {
+		t.Error("/stats served with no StatsReader configured")
+	}
+}
+
+type countingStats struct {
+	calls int
+	err   error
+}
+
+func (c *countingStats) Stats(_ context.Context, cfg *config.Config) (*stats.Snapshot, error) {
+	c.calls++
+	if c.err != nil {
+		return nil, c.err
+	}
+	return &stats.Snapshot{Version: cfg.Version, MinN: stats.MinN}, nil
 }
 
 type failingStore struct{}

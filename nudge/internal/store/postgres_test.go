@@ -136,6 +136,27 @@ func TestPostgres(t *testing.T) {
 		}
 	}
 
+	snap, err := pg.Stats(ctx, cfg)
+	if err != nil {
+		t.Fatalf("Stats: %v", err)
+	}
+	if snap.Progress.Choices < 1 || len(snap.Daily) != 30 || len(snap.Balance) != len(cfg.Factors) {
+		t.Errorf("snapshot: choices=%d daily=%d balance=%d", snap.Progress.Choices, len(snap.Daily), len(snap.Balance))
+	}
+	if today := snap.Daily[len(snap.Daily)-1]; today.Choices < 1 {
+		t.Errorf("today's choices = %d, want ≥ 1", today.Choices)
+	}
+	for _, b := range snap.Balance {
+		if b.Total == 0 {
+			t.Errorf("balance %s counted nothing", b.Factor)
+		}
+	}
+	for _, r := range snap.Attributes {
+		if r.N < 30 && r.Share != nil {
+			t.Errorf("%s/%s with n=%d was not hidden", r.Attribute, r.Level, r.N)
+		}
+	}
+
 	// The Supabase API roles must not see anything.
 	if _, err := conn.Exec(ctx, `set role anon`); err == nil {
 		_, err := conn.Exec(ctx, `select 1 from choices limit 1`)

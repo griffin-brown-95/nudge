@@ -16,6 +16,7 @@ The browser never talks to Supabase directly. Only the `nudge` service has DB cr
 | `supabase/migrations/` | Schema and analysis views |
 | `scripts/wipe.sh` | Deletes all experiment data and keeps the schema |
 | `web/` | Static frontend: plain HTML, CSS and ES modules, no build step |
+| `web/dashboard/` | Live results dashboard, reading `GET /stats` |
 
 ## Local development
 
@@ -41,6 +42,26 @@ matches `ALLOWED_ORIGIN`). Before deploying, set `API_BASE` in
 
 `make run-memory` runs the API without any database, for frontend work. The
 [Makefile](Makefile) lists every target.
+
+## Dashboard
+
+https://griffin-brown-95.github.io/nudge/dashboard/ shows live results from
+`GET /stats`. The API computes that snapshot from the analysis views at most
+once a minute per instance. Rates come with 95% Wilson intervals, and anything
+with fewer than 30 trials is reported as a count only, so early noise isn't
+presented as a result.
+
+To work on it locally with realistic data:
+
+```bash
+make db-reset && make simulate   # 300 synthetic visitors with known biases
+make run-local                   # then `make web` and open /dashboard/
+```
+
+The simulator builds in a first-option effect (+0.25 logit), solid > soft/outline,
++8% size, and a blue > red > … > gray color order. If the dashboard shows
+those, the pipeline from event to chart is correct. It refuses to run against
+anything but localhost.
 
 ## Test, then wipe
 
