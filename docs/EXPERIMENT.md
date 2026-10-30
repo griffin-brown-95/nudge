@@ -146,3 +146,61 @@ Each attribute gets its own column (`opt1_color`, `opt1_emphasis`, `opt1_size`, 
 - **Test, then wipe:** a wipe script clears every event table and keeps the schema. Running it before launch starts real data collection from zero. Locally, `supabase db reset` rebuilds the whole database.
 - The per-IP rate limiter lives in memory only and IPs are never stored.
 - `/stats` and the results screen are deferred.
+
+## 10. Planned: personal results (not built)
+
+**Status:** designed 2026-10-30, not implemented. Build once the crowd data can support it (see "Crowd prerequisite").
+
+Show players how their picks compare with everyone else's: did they go with the crowd, against the grain, or somewhere in between?
+
+### The score: agreement with the crowd
+
+- **Crowd favorite:** for each of a player's picks, predict which option the crowd favors from how the two options differ (color, emphasis, size, position), using the crowd's win rates for those matchups.
+- **Clear-cut picks only:** a pick counts only if the crowd has a real preference there: the deciding matchup has at least 30 trials, and the favorite's 95% lower bound is above 50%. A coin-flip matchup says nothing about the player.
+- **Agreement score:** the share of the player's clear-cut picks where they chose the crowd favorite, for example "14 of 20 (70%)".
+
+### Placement
+
+Players are compared with the typical player's agreement rate, using the uncertainty of their own score, not just the raw number:
+
+| Label | Meaning |
+|---|---|
+| **Went with the crowd** | Agreement clearly above typical (80% interval entirely above) |
+| **Somewhere in the middle** | Not clearly different from typical |
+| **Against the grain** | Agreement clearly below typical (80% interval entirely below) |
+
+Alongside the label, a few per-factor facts, for example "You picked the first option 70% of the time; most people: 56%", or "Blue was your pick 8 times out of 10".
+
+### Minimum picks
+
+Assuming a typical agreement rate of about 60%, the 80% interval on a player's score narrows like this:
+
+| Clear-cut picks | 80% interval | ≈ total picks (about 2 in 3 are clear-cut) |
+|---|---|---|
+| 18 | ±15 points | **30: first read, worded tentatively ("leaning against the grain")** |
+| 40 | ±10 points | **60: confident read** |
+| 80 | ±7 points | ~115 |
+
+So feedback becomes available at **30 picks**, and the wording firms up from about 60.
+
+### Crowd prerequisite
+
+Crowd favorites need crowd data first. Emphasis, size and position matchups reach 30 trials within a few hundred total trials; the 15 color pairs need about 1,800 (see §3a). Until enough matchups qualify, the feature says "not enough crowd data yet" instead of guessing.
+
+### When it's shown
+
+- **One-time offer** the first time a player qualifies (pick 30, or later if the crowd data isn't ready yet): "See how you compare?" with *See my results* / *Keep going*. It's the only prompt after the first-10 check-in.
+- **Afterwards,** a "Your results" link on the start screen.
+
+### Protecting the data
+
+Seeing results reveals what's being measured, so viewing them sets `informed = true`. Later picks are excluded from the main analysis, exactly like reading the "what was going on" explanation.
+
+### How it would be built
+
+- **API:** `GET /me?vid=…` returns the player's summary, computed from their own choices plus the cached crowd snapshot (the same data as `/stats`). Only someone with the player's random browser ID can fetch it. Nothing new is stored.
+- **Tests:**
+  - favorite selection and the "clear-cut" filter
+  - placement at the interval boundaries
+  - the 30-pick and crowd-data gates
+  - `informed` being set after viewing
