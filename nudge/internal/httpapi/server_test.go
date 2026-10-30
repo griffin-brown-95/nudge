@@ -304,6 +304,19 @@ func TestClientIP(t *testing.T) {
 	}
 }
 
+func TestUnknownPaths(t *testing.T) {
+	h := newHarness(t)
+	for _, path := range []string{"/", "/favicon.ico", "/admin", "/trials/extra"} {
+		if rec := h.do("GET", path, "", nil, ""); rec.Code != 404 {
+			t.Errorf("GET %s = %d, want 404", path, rec.Code)
+		}
+	}
+	// Known paths with the wrong method are still 405.
+	wantStatus(t, h.do("GET", "/event", pagesOrigin, nil, ""), 405)
+	// Preflight still works for real endpoints.
+	wantStatus(t, h.do("OPTIONS", "/event", pagesOrigin, nil, ""), 204)
+}
+
 func TestStats(t *testing.T) {
 	counter := &countingStats{}
 	h := newHarness(t, func(o *Options) { o.Stats = counter })
