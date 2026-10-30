@@ -84,9 +84,11 @@ function renderKpis() {
     </div>`).join("");
 }
 
+// Drawn at the container's real pixel width (and redrawn on resize) so text
+// and rounded bar ends are never stretched.
 function renderDaily() {
   const days = snap.daily || [];
-  const W = 600, H = 160, top = 14, bottom = 20, gap = 2;
+  const W = Math.max(120, Math.round($("daily").clientWidth)), H = 160, top = 14, bottom = 20, gap = 2;
   const max = Math.max(1, ...days.map((d) => d.choices));
   const plotH = H - top - bottom;
   const bw = W / Math.max(days.length, 1);
@@ -109,7 +111,7 @@ function renderDaily() {
   }).join("");
 
   $("daily").innerHTML = `
-    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img"
+    <svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img"
          aria-label="Choices per day for the last 30 days, peak ${int(max)}">
       <line class="gridline" x1="0" x2="${W}" y1="${top}" y2="${top}"></line>
       <text x="0" y="${top - 4}">${int(max)}</text>
@@ -120,17 +122,19 @@ function renderDaily() {
     </svg>`;
 }
 
+// Every interval chart on the page uses this one fixed scale, so a given
+// percentage sits in the same place in every chart, category and filter.
+// Ranges that run past it are clipped and marked; the text keeps exact values.
+const SCALE = [0.2, 0.8];
+const TICKS = [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8];
+
 // An interval chart: one row per rate, dot = share, bar = 95% range, dashed
-// line = 50%. All rows in one chart share the same domain.
+// line = 50%.
 function intervalChart(rows, { title = "", what = "picked" } = {}) {
-  const shown = rows.filter((r) => r.share != null);
-  let lo = Math.min(0.35, ...shown.map((r) => r.lo - 0.02));
-  let hi = Math.max(0.65, ...shown.map((r) => r.hi + 0.02));
-  lo = Math.max(0, Math.floor(lo * 10) / 10);
-  hi = Math.min(1, Math.ceil(hi * 10) / 10);
-  const x = (v) => `${((v - lo) / (hi - lo)) * 100}%`;
-  const ticks = [];
-  for (let t = lo; t <= hi + 1e-9; t += 0.1) ticks.push(Math.round(t * 10) / 10);
+  const [lo, hi] = SCALE;
+  const clamp = (v) => Math.min(hi, Math.max(lo, v));
+  const x = (v) => `${((clamp(v) - lo) / (hi - lo)) * 100}%`;
+  const ticks = TICKS;
 
   const body = rows.map((r) => {
     const label = `<div class="row-label${r.total ? " total" : ""}">${r.swatch || ""}<span>${esc(r.label)}</span></div>`;
@@ -147,8 +151,9 @@ function intervalChart(rows, { title = "", what = "picked" } = {}) {
       ${label}
       <div class="track" aria-hidden="true">
         <div class="ref" style="left:${x(0.5)}"></div>
-        <div class="ci" style="left:${x(r.lo)};width:calc(${x(r.hi)} - ${x(r.lo)})"></div>
-        <div class="dot" style="left:${x(r.share)}"></div>
+        <div class="ci${r.lo < lo ? " clip-lo" : ""}${r.hi > hi ? " clip-hi" : ""}"
+             style="left:${x(r.lo)};width:calc(${x(r.hi)} - ${x(r.lo)})"></div>
+        <div class="dot${r.share < lo || r.share > hi ? " off-scale" : ""}" style="left:${x(r.share)}"></div>
       </div>
       <div class="row-value"><b>${pct(r.share)}</b> ${pct(r.lo)}–${pct(r.hi)} · n=${int(r.n)}</div>
     </div>`;
@@ -291,6 +296,15 @@ document.addEventListener("focusin", (e) => {
 });
 document.addEventListener("focusout", () => (tooltip.hidden = true));
 addEventListener("scroll", () => (tooltip.hidden = true), { passive: true });
+
+let dailyWidth = 0;
+new ResizeObserver(([entry]) => {
+  const w = Math.round(entry.contentRect.width);
+  if (snap && w !== dailyWidth) {
+    dailyWidth = w;
+    renderDaily();
+  }
+}).observe($("daily"));
 
 load();
 setInterval(load, REFRESH_MS);
