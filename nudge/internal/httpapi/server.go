@@ -3,6 +3,7 @@
 //	GET  /health                        liveness (?deep=1 also pings the DB)
 //	GET  /trials?vid=&start=&count=     a visitor's next block of trials
 //	POST /event                         one event (session_start, exposure, choice, block_end)
+//	GET  /stats                         public results snapshot for the dashboard (cached)
 //
 // Not /healthz: Cloud Run reserves some paths ending in "z" and answers them
 // itself with a 404 before they reach the container.
@@ -17,19 +18,26 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"nudge/internal/assign"
+	"nudge/internal/config"
 	"nudge/internal/events"
 	"nudge/internal/store"
 )
 
-const maxTrialsPerRequest = 50
+const (
+	maxTrialsPerRequest = 50
+	statsTTL            = time.Minute
+)
 
 type Options struct {
 	Assigner       *assign.Assigner
 	BlockSize      int
 	Store          store.Store
+	Config         *config.Config    // needed by /stats
+	Stats          store.StatsReader // nil disables /stats
 	AllowedOrigins []string
 	Limiter        *Limiter // nil disables rate limiting
 	Logger         *slog.Logger
@@ -39,6 +47,10 @@ type Server struct {
 	opts      Options
 	validator *events.Validator
 	allowed   map[string]bool
+
+	statsMu   sync.Mutex
+	statsSnap []byte
+	statsAt   time.Time
 }
 
 func New(opts Options) *Server {
@@ -59,6 +71,9 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /health", s.health)
 	mux.Handle("GET /trials", s.limit(http.HandlerFunc(s.trials)))
 	mux.Handle("POST /event", s.limit(http.HandlerFunc(s.event)))
+	if s.opts.Stats != nil {
+		mux.Handle("GET /stats", s.limit(http.HandlerFunc(s.stats)))
+	}
 	mux.HandleFunc("OPTIONS /", func(w http.ResponseWriter, r *http.Request) {}) // answered by cors
 	return s.logRequests(s.cors(mux))
 }
@@ -162,6 +177,34 @@ func (s *Server) event(w http.ResponseWriter, r *http.Request) {
 	default:
 		writeJSON(w, http.StatusAccepted, map[string]bool{"ok": true})
 	}
+}
+
+// stats serves the dashboard's snapshot. It's computed at most once per
+// statsTTL per instance; the mutex also makes concurrent requests wait for one
+// computation instead of each querying the database.
+func (s *Server) stats(w http.ResponseWriter, r *http.Request) {
+	s.statsMu.Lock()
+	defer s.statsMu.Unlock()
+	if s.statsSnap == nil || time.Since(s.statsAt) > statsTTL {
+		ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+		defer cancel()
+		snap, err := s.opts.Stats.Stats(ctx, s.opts.Config)
+		if err != nil {
+			s.opts.Logger.Error("stats failed", "err", err)
+			writeJSON(w, http.StatusServiceUnavailable, errBody("stats_unavailable"))
+			return
+		}
+		b, err := json.Marshal(snap)
+		if err != nil {
+			writeJSON(w, http.StatusInternalServerError, errBody("stats_encode"))
+			return
+		}
+		s.statsSnap, s.statsAt = b, time.Now()
+	}
+	age := int(time.Since(s.statsAt).Seconds())
+	w.Header().Set("Cache-Control", "public, max-age="+strconv.Itoa(max(0, int(statsTTL.Seconds())-age)))
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(s.statsSnap)
 }
 
 // cors allows only configured origins. Requests without an Origin header

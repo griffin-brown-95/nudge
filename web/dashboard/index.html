@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>A or B? Live Results</title>
+  <meta name="description" content="Live results from the A or B? choice experiment: what nudges people's picks.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="preload" href="../fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="dashboard.css">
+  <script type="module" src="dashboard.js"></script>
+</head>
+<body>
+  <main class="dash">
+    <header class="dash-head">
+      <div>
+        <p class="kicker">Live experiment</p>
+        <h1>A or B? Results</h1>
+        <p class="lede">
+          Visitors pick between two buttons, over and over. Behind the scenes, color, fill, size,
+          position and layout are randomized on every pick. Every number here is real and updates
+          each minute.
+        </p>
+      </div>
+      <nav class="head-links">
+        <a class="pill" href="../">Play the game</a>
+        <a class="pill" href="https://github.com/griffin-brown-95/nudge" target="_blank" rel="noopener">Code</a>
+      </nav>
+      <p class="status" id="status" aria-live="polite">Loading…</p>
+    </header>
+
+    <section aria-labelledby="h-progress">
+      <h2 id="h-progress" class="visually-hidden">Progress</h2>
+      <div class="kpis" id="kpis"></div>
+    </section>
+
+    <section class="card" aria-labelledby="h-daily">
+      <div class="card-head">
+        <h2 id="h-daily">Choices per day</h2>
+        <p class="note">Last 30 days, UTC</p>
+      </div>
+      <div id="daily" class="daily"></div>
+    </section>
+
+    <section class="card" aria-labelledby="h-position">
+      <div class="card-head">
+        <h2 id="h-position">Do people pick whichever option comes first?</h2>
+        <p class="note">Share of picks going to the first option shown (left, or top on phones). 50% means no preference.</p>
+      </div>
+      <div id="position"></div>
+    </section>
+
+    <section class="card" aria-labelledby="h-attr">
+      <div class="card-head">
+        <h2 id="h-attr">What wins?</h2>
+        <p class="note">How often an option with each style was picked when its opponent looked different.</p>
+      </div>
+      <div class="filters" role="radiogroup" aria-label="Layout frame" id="frame-filter">
+        <button type="button" role="radio" aria-checked="true" data-frame="">All</button>
+        <button type="button" role="radio" aria-checked="false" data-frame="tiles">Tiles</button>
+        <button type="button" role="radio" aria-checked="false" data-frame="split">Split screen</button>
+      </div>
+      <div id="attributes" class="attr-grid"></div>
+    </section>
+
+    <section class="card" aria-labelledby="h-matchups">
+      <div class="card-head">
+        <h2 id="h-matchups">Most one-sided matchups</h2>
+        <p class="note">Ranked by the lower end of the 95% range, so a lucky small sample can't top the list.</p>
+      </div>
+      <div id="matchups"></div>
+    </section>
+
+    <section class="card" aria-labelledby="h-decide">
+      <div class="card-head">
+        <h2 id="h-decide">How people decide</h2>
+        <p class="note">From hover and keyboard traces. Touch screens can't hover, so phones only report time.</p>
+      </div>
+      <div id="decisions"></div>
+    </section>
+
+    <section class="card" aria-labelledby="h-health">
+      <div class="card-head">
+        <h2 id="h-health">Randomization health</h2>
+        <p class="note">Each factor should be assigned in equal shares. A lopsided split (a "sample ratio mismatch") would mean a bug in assignment or logging.</p>
+      </div>
+      <div id="balance" class="balance"></div>
+    </section>
+
+    <footer class="method">
+      <h2>Method</h2>
+      <ul>
+        <li>Ranges are 95% Wilson score intervals. A result appears once it has at least <span id="min-n">30</span> trials; until then only its count is shown.</li>
+        <li>Each visitor's first view of each trial counts. Trials played after reading the "what was going on" explanation are excluded.</li>
+        <li>Levels are randomized independently per option, per trial and per visitor with salted hashes, so every pick informs every factor.</li>
+      </ul>
+    </footer>
+  </main>
+  <div class="tooltip" id="tooltip" role="tooltip" hidden></div>
+</body>
+</html>

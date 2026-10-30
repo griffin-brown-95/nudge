@@ -44,10 +44,12 @@ func run(log *slog.Logger) error {
 	}
 
 	var st store.Store
+	var sr store.StatsReader
 	switch envOr("STORE", "postgres") {
 	case "memory":
 		log.Warn("using in-memory store: events are NOT persisted")
-		st = store.NewMemory()
+		mem := store.NewMemory()
+		st, sr = mem, mem
 	case "postgres":
 		url := os.Getenv("DATABASE_URL")
 		if url == "" {
@@ -58,7 +60,7 @@ func run(log *slog.Logger) error {
 			return err
 		}
 		defer pg.Close()
-		st = pg
+		st, sr = pg, pg
 	default:
 		return errors.New("STORE must be postgres or memory")
 	}
@@ -72,6 +74,8 @@ func run(log *slog.Logger) error {
 		Assigner:       assign.New(cfg),
 		BlockSize:      cfg.BlockSize,
 		Store:          st,
+		Config:         cfg,
+		Stats:          sr,
 		AllowedOrigins: origins,
 		Limiter:        httpapi.NewLimiter(10, 60),
 		Logger:         log,
