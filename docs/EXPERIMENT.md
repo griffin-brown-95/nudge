@@ -17,7 +17,7 @@ We don't show any results to visitors yet. A stats and results module comes late
 ```
 Start screen                      Trial (×10)                       Block end
 ┌──────────────────────────┐      ┌──────────────────────────┐      ┌──────────────────────────┐
-│  A or B?                 │      │  Pick one.               │      │  That's 10!              │
+│  A or B?                 │      │  Pick one.               │      │  Keep going?             │
 │  [prime text, if any]    │ ───▶ │  ┌────────┐  ┌────────┐  │ ───▶ │  [ Keep going ]          │
 │     [ Are you ready? ]   │      │  │   A    │  │   B    │  │      │  [ I'm done ]            │
 │  clicks logged anonymously│     │  └────────┘  └────────┘  │      └──────────────────────────┘
@@ -28,7 +28,8 @@ Start screen                      Trial (×10)                       Block end
 - **"Are you ready?"** is centered horizontally. On desktop, that puts the pointer the same distance from both options when trial 1 appears. The pointer's position at render is logged anyway.
 - Ready stays disabled until the brand font has loaded. Otherwise a late font swap would throw off the timing.
 - **Timing:** the clock starts at render (after two `requestAnimationFrame` calls) and stops at the click or tap event's `timeStamp`.
-- **Keep going** starts another block of 10 trials. There is no limit.
+- The corner counter shows the running pick number ("Pick 13"); see the joke counter in §7a.
+- After every 10 trials the visitor sees **Keep going?** with *Keep going* / *I'm done*. Keep going continues for as long as they like; the check-in isn't presented as a fixed count.
 - **I'm done** shows a thank-you screen with a short note on what was varied (no numbers). If they continue after that, their trials are flagged `informed = true`, so analysis can separate them out.
 - **Returning visitors** pick up at their next trial number. They keep their visitor-level conditions.
 
@@ -127,6 +128,7 @@ Each attribute gets its own column (`opt1_color`, `opt1_emphasis`, `opt1_size`, 
 |---|---|---|
 | **Resting cursor highlights an option** | Whichever option is under a still pointer when a trial appears would show its hover highlight, an unintended nudge. | Fixed 2026-10-30: hover styling waits until the pointer moves. |
 | **Pointer carryover between trials** | After a choice the cursor stays where it clicked, so on the next trial the same side is closer, and often already under the pointer. That favors repeating a side. | Recorded, not prevented: `rendered.pointer` and `v_choice_traces.started_on_option`. Trial 1 (after the centered Ready button) is the clean baseline. A "click the dot to continue" step would remove it at the cost of pace. |
+| **Joke counter** | The corner counter shows the running pick number; from pick 20, every 10th pick shows a joke instead ("wow / 10", "a lot / 10", "read a book / 10"…). Those trials may be slightly slower or more distracted. | Deterministic: a trial showed a joke exactly when `trial_index + 1 >= 20` and `(trial_index + 1) % 10 = 0`, i.e. the last trial of every block from the second block on. Exclude or compare those trials if latency matters. |
 | **Split-frame size moves the divider** | +8% in split shifts the dividing line about 11px away from the start position. | Inherent to "bigger share of the screen". Analyze size × frame. |
 
 ## 8. Validity tests (Go, run in CI)

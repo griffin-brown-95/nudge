@@ -169,7 +169,7 @@ async function init() {
   show("start", "Just pick one.", "Loading…");
   const ready = $("ready");
   [fontsOK] = await Promise.all([fontsReady(), loadBlock()]);
-  show("start", "Just pick one.", primeText() || "Ten quick choices. No right answers.");
+  show("start", "Just pick one.", primeText() || "Quick choices. No right answers.");
   ready.textContent = "Are you ready?";
   ready.disabled = false;
   ready.focus({ preventScroll: true });
@@ -222,11 +222,28 @@ function setSplitBounds() {
 }
 addEventListener("resize", setSplitBounds);
 
+// The corner counter is the visitor's running total of picks. From pick 20
+// on, every 10th pick shows a joke "rating" instead, escalating with
+// dedication. It's a pure function of the pick number, so analysis can tell
+// exactly which trials showed a joke from trial_index alone.
+const COUNTER_JOKES = [
+  [100, ["read a book / 10", "touch grass / 10", "go outside / 10", "legend / 10"]],
+  [50, ["a lot / 10", "still here? / 10", "dedicated / 10"]],
+  [20, ["wow / 10", "nice / 10", "impressive / 10"]],
+];
+
+function counterText(pick) {
+  if (pick >= 20 && pick % 10 === 0) {
+    const [min, jokes] = COUNTER_JOKES.find(([min]) => pick >= min);
+    return jokes[((pick - min) / 10) % jokes.length];
+  }
+  return `Pick ${pick}`;
+}
+
 function runTrial(i) {
   const trial = s.block[i];
   const renderStart = performance.now();
-  const pos = trial.index % s.blockSize;
-  $("progress").textContent = `${pos + 1} / ${s.blockSize}`;
+  $("progress").textContent = counterText(trial.index + 1);
 
   app.dataset.frame = trial.trial.frame || "tiles";
   setSplitBounds();
@@ -315,7 +332,7 @@ function blockEnd(blockIndex) {
   endedBlock = blockIndex;
   $("progress").textContent = "";
   nextBlock = loadBlock(); // fetch while they decide
-  show("block", `That's ${s.blockSize}!`, `Keep going for another ${s.blockSize}?`);
+  show("block", "Keep going?");
   $("keep-going").focus({ preventScroll: true });
 }
 
