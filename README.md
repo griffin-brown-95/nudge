@@ -112,6 +112,14 @@ Settings → Pages → Source must be **GitHub Actions**.
 ### Privacy
 
 No IPs are stored by `nudge`, and the rate limiter keeps them only in memory.
-Cloud Run's own request logs do record client IPs; to drop them, add a log
-exclusion in Cloud Logging for `resource.type="cloud_run_revision" AND
-log_name:"requests"`.
+Cloud Run's own request logs record client IPs, so they're dropped before
+storage by a Cloud Logging exclusion on the `_Default` sink (added 2026-10-30):
+
+```bash
+gcloud logging sinks update _Default --project nudge-513203 \
+  --add-exclusion='name=nudge-request-logs,filter=resource.type="cloud_run_revision" AND resource.labels.service_name="nudge" AND log_id("run.googleapis.com/requests")'
+```
+
+The app's own logs (method, path, status, duration; no IP or visitor ID)
+still arrive. Request counts and latency remain available in Cloud Run's
+Metrics tab, which doesn't store IPs.
